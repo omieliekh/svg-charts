@@ -1,0 +1,7 @@
+svg {
+  background: #f8f8f8;
+}
+
+path {
+  transition: all .2s ease-in-out;
+}
