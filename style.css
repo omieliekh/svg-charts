@@ -5,3 +5,11 @@ svg {
 path {
   transition: all .2s ease-in-out;
 }
+
+.active-area:not(:hover) + .sector-line {
+  display: none;
+}
+
+.sector-line {
+  pointer-events: none;
+}

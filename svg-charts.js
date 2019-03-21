@@ -1,8 +1,13 @@
 const getSeed = () => 'svgcharts_' + (Math.random()+'').substr(2);
 
-const render = ({ container, pathsList, width, height }) => {
-  container = typeof container === 'string' ? document.querySelector(container) : container;
-
+const render = ({
+  containerElem,
+  pathsList,
+  strokeWidth,
+  xValues,
+  realXInterval,
+  paddingLeft
+}) => {
   const seed = getSeed();
 
   console.log('pathsList: ', pathsList);
@@ -10,34 +15,68 @@ const render = ({ container, pathsList, width, height }) => {
   const pathTags = pathsList
     .map(path => {
       const dAttr = path.values.map(val => val.dot).join(' ');
-      return `<path d="${dAttr}" stroke="${path.color}" stroke-width="2" fill="none"></path>`;
+      return `<path d="${dAttr}" stroke="${path.color}" stroke-width="${strokeWidth}" fill="none"></path>`;
     });
 
-  container.innerHTML =
-    `<svg id="${seed}" width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${pathTags.join('')}</svg>`;
+
+  pathTags.push(xValues.map((xValue, i) => {
+    return `
+      <g>
+        <rect x="${paddingLeft + realXInterval / 2 + realXInterval * i}" y="0" width="${realXInterval}" height="100%" fill="transparent" class="active-area" />
+        <rect x="${paddingLeft + realXInterval / 2 + realXInterval * i + realXInterval / 2 - 1}" y="0" width="1" height="100%" fill="#88888888" class="sector-line" />
+      </g>  
+    `
+  }));
+
+  containerElem.innerHTML =
+    `<svg id="${seed}" width="${containerElem.clientWidth}" height="${containerElem.clientHeight}" xmlns="http://www.w3.org/2000/svg">${pathTags.join('')}</svg>`;
 
   return document.querySelector(`#${seed}`);
 };
 
 function SVGCharts({
   container,
-  height = 200,
-  width = 400,
-  paddingLeft = 20,
-  paddingRight = 20,
-  paddingTop = 20,
-  paddingBottom = 20,
+  paddingLeft = 10,
+  paddingRight = 10,
+  paddingTop = 10,
+  paddingBottom = 10,
   xAxis = 'x',
   yAxis = 'y',
+  strokeWidth = 2,
   data
 }) {
-  if (!container) throw new Error('SVGCharts. "container" option is not defined');
+  if (!container || (typeof container !== 'string' && !container.nodeType)) {
+    throw new Error('SVGCharts. "container" option should be DOM node or valid selector');
+  }
 
   if (!data) throw new Error('SVGCharts. "data" option is not defined');
 
-  const pathsList = getPaths({ columns: data.columns, colors: data.colors, height, width });
+  const containerElem = container.nodeType ? container : document.querySelector(container);
 
-  render({ container, pathsList, width, height });
+  function preRender() {
+    const width = containerElem.clientWidth - paddingLeft - paddingRight;
+    const height = containerElem.clientHeight - paddingTop - paddingTop;
+
+    const xValues = getXValues(data.columns);
+    const realXInterval = width / (xValues.length - 1);
+
+    const pathsList = getPaths({
+      columns: data.columns,
+      colors: data.colors,
+      paddingLeft,
+      paddingTop,
+      height,
+      width,
+      xValues,
+      realXInterval
+    });
+
+    render({ containerElem, pathsList, strokeWidth, xValues, realXInterval, paddingLeft });
+  }
+
+  preRender();
+
+  window.addEventListener('resize', preRender);
 }
 
 function getXValues(columns) {
@@ -83,9 +122,16 @@ function getYMinMax(yValuesList) {
   }
 }
 
-function getPaths({ columns, colors, height, width }) {
-  const xValues = getXValues(columns);
-  const realInterv = width / (xValues.length - 1);
+function getPaths({
+  columns,
+  colors,
+  height,
+  width,
+  paddingLeft,
+  paddingTop,
+  xValues,
+  realXInterval
+}) {
   const yValuesList = getYValuesList(columns);
   // const interval = getXValuesInterval(xValues);
   const minMaxVals = getYMinMax(yValuesList);
@@ -98,8 +144,8 @@ function getPaths({ columns, colors, height, width }) {
           realX: xValues[i],
           realY: y,
 
-          x: i * realInterv,
-          y: height - ((y - minMaxVals.min) / minMaxVals.delta * height)
+          x: i * realXInterval + paddingLeft,
+          y: height - ((y - minMaxVals.min) / minMaxVals.delta * height) + paddingTop
         }))
         .map(({ x, y, realX, realY }, i) => ({ dot: `${i ? 'L' : 'M'}${x} ${y}`, realX, realY }))
     };
