@@ -1,0 +1,101 @@
+.svg-charts svg {
+  background: #f8f8f8;
+  margin-bottom: 1px;
+}
+
+.svg-charts path {
+  transition: all .2s ease-in-out;
+}
+
+.svg-charts text {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 14px;
+}
+
+.svg-charts text:not(.y-label) {
+  fill: #444;
+}
+
+.svg-charts .active-area {
+  fill: transparent;
+}
+
+.svg-charts .active-area:not(:hover) ~ .sector-line,
+.svg-charts .active-area:not(:hover) ~ .hover-text,
+.svg-charts .active-area:not(:hover) ~ .bg-rect {
+  display: none;
+}
+
+.svg-charts .hover-text,
+.svg-charts .bg-rect {
+  pointer-events: none;
+}
+
+.svg-charts .bg-rect {
+  fill: #ffffff;
+  box-shadow: 1px 1px 1px #444;
+}
+
+.svg-charts .sector-line {
+  pointer-events: none;
+  fill: #88888888;
+}
+
+.svg-charts .sliders {
+  overflow: hidden;
+}
+
+.svg-charts .sliders,
+.svg-charts .slider-bg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.svg-charts .slider-bg {
+  border-style: solid;
+  border-color: #88888866;
+  border-width: 1px 0;
+}
+
+.svg-charts .slider-left,
+.svg-charts .slider-right {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  width: 8px;
+  background-color: #44444466;
+  cursor: col-resize;
+  overflow: visible;
+}
+
+.svg-charts .slider-left {
+  left: 0;
+}
+
+.svg-charts .slider-left:after {
+  content: '';
+  width: 9999px;
+  position: absolute;
+  right: 100%;
+  top: -1px;
+  bottom: -1px;
+  background-color: #88888866;
+}
+
+.svg-charts .slider-right {
+  right: 0;
+}
+
+.svg-charts .slider-right:after {
+  content: '';
+  width: 9999px;
+  position: absolute;
+  left: 100%;
+  top: -1px;
+  bottom: -1px;
+  background-color: #88888866;
+}
