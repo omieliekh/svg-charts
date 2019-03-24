@@ -1,4 +1,7 @@
-const getSeed = () => 'svgcharts_' + (Math.random()+'').substr(2);
+const TEXT_PIXEL_INTERVAL = 70;
+const TEXT_PIXEL_HEIGHT = 30;
+const TEXT_PIXEL_PADDING_LEFT = 2;
+const TEXT_PIXEL_PADDING_BOTTOM = 7;
 
 const render = ({
   containerElem,
@@ -6,11 +9,12 @@ const render = ({
   strokeWidth,
   xValues,
   realXInterval,
-  paddingLeft
+  paddingLeft,
+  paddingTop,
+  textValueInterval,
+  isSimpleChart
 }) => {
   const seed = getSeed();
-
-  console.log('pathsList: ', pathsList);
 
   const pathTags = pathsList
     .map(path => {
@@ -19,17 +23,31 @@ const render = ({
     });
 
 
-  pathTags.push(xValues.map((xValue, i) => {
-    return `
-      <g>
-        <rect x="${paddingLeft + realXInterval / 2 + realXInterval * i}" y="0" width="${realXInterval}" height="100%" fill="transparent" class="active-area" />
-        <rect x="${paddingLeft + realXInterval / 2 + realXInterval * i + realXInterval / 2 - 1}" y="0" width="1" height="100%" fill="#88888888" class="sector-line" />
-      </g>  
-    `
-  }));
+  const verticalLines = isSimpleChart ? [] : xValues.map((xValue, i) => (`
+    <g>
+      <rect x="${paddingLeft + realXInterval / 2 + realXInterval * i}" y="0" width="${realXInterval}" height="${containerElem.clientHeight - TEXT_PIXEL_HEIGHT}" fill="transparent" class="active-area" />
+      <rect x="${paddingLeft + realXInterval / 2 + realXInterval * i + realXInterval / 2 - 1}" y="0" width="1" height="${containerElem.clientHeight - TEXT_PIXEL_HEIGHT}" fill="#88888888" class="sector-line" />
+    </g>
+  `));
 
-  containerElem.innerHTML =
-    `<svg id="${seed}" width="${containerElem.clientWidth}" height="${containerElem.clientHeight}" xmlns="http://www.w3.org/2000/svg">${pathTags.join('')}</svg>`;
+  const textTags = isSimpleChart ? [] : pathsList[0].values
+    .filter((item, i) => i % textValueInterval === 0)
+    .map((item) => item.x + TEXT_PIXEL_INTERVAL > containerElem.clientWidth ? '' : `<text x="${item.x + TEXT_PIXEL_PADDING_LEFT}" y="${containerElem.clientHeight - TEXT_PIXEL_PADDING_BOTTOM}">${toDate(item.realX)}</text>`);
+
+
+  const existingSvg = containerElem.querySelector('svg');
+
+  const svg = existingSvg || htmlNode('svg', {
+    id: seed,
+    width: containerElem.clientWidth,
+    height: containerElem.clientHeight
+  });
+
+  if (!existingSvg) {
+    containerElem.append(svg);
+  }
+
+  svg.innerHTML = `${pathTags.join('')}${textTags.join('')}${verticalLines.join('')}`;
 
   return document.querySelector(`#${seed}`);
 };
@@ -40,9 +58,12 @@ function SVGCharts({
   paddingRight = 10,
   paddingTop = 10,
   paddingBottom = 10,
+  shift = 0,
+  zoom = 100,
   xAxis = 'x',
   yAxis = 'y',
   strokeWidth = 2,
+  isSimpleChart = false,
   data
 }) {
   if (!container || (typeof container !== 'string' && !container.nodeType)) {
@@ -54,11 +75,12 @@ function SVGCharts({
   const containerElem = container.nodeType ? container : document.querySelector(container);
 
   function preRender() {
-    const width = containerElem.clientWidth - paddingLeft - paddingRight;
-    const height = containerElem.clientHeight - paddingTop - paddingTop;
+    const width = (containerElem.clientWidth - paddingLeft - paddingRight) * zoom / 100;
+    const height = containerElem.clientHeight - paddingTop - paddingBottom - (isSimpleChart ? 0 : TEXT_PIXEL_HEIGHT);
 
     const xValues = getXValues(data.columns);
     const realXInterval = width / (xValues.length - 1);
+    const textValueInterval = Math.ceil(TEXT_PIXEL_INTERVAL / realXInterval);
 
     const pathsList = getPaths({
       columns: data.columns,
@@ -71,7 +93,16 @@ function SVGCharts({
       realXInterval
     });
 
-    render({ containerElem, pathsList, strokeWidth, xValues, realXInterval, paddingLeft });
+    render({
+      containerElem,
+      pathsList,
+      strokeWidth,
+      xValues,
+      realXInterval,
+      paddingLeft,
+      textValueInterval,
+      isSimpleChart
+    });
   }
 
   preRender();
@@ -140,14 +171,42 @@ function getPaths({
     return {
       color: colors[key],
       values: yValuesList[key]
-        .map((y, i) => ({
-          realX: xValues[i],
-          realY: y,
+        .map((realY, i) => {
+          const x = i * realXInterval + paddingLeft;
+          const y = height - ((realY - minMaxVals.min) / minMaxVals.delta * height) + paddingTop;
+          const dot = `${i ? 'L' : 'M'}${x} ${y}`;
 
-          x: i * realXInterval + paddingLeft,
-          y: height - ((y - minMaxVals.min) / minMaxVals.delta * height) + paddingTop
-        }))
-        .map(({ x, y, realX, realY }, i) => ({ dot: `${i ? 'L' : 'M'}${x} ${y}`, realX, realY }))
+          return {
+            dot,
+            realX: xValues[i],
+            realY,
+            x,
+            y
+          }
+        })
     };
   });
+}
+
+const onePxImage = htmlNode('img', { src: 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==' });
+document.body.append(onePxImage);
+
+function dragStart(event) {
+  event.dataTransfer.setDragImage(onePxImage, 0, 0);
+}
+
+function drag(event) {
+  const parent = event.target.parentElement;
+  const bg = parent.querySelector('.slider-bg');
+  const w = event.target.clientWidth;
+  const left = event.x - w;
+
+  event.target.style.left = `${event.x - w}px`;
+
+  if (event.target.classList.contains('slider-left')) {
+    bg.style.left = `${left}px`;
+  } else {
+    bg.style.right = `${parent.clientWidth - left - w}px`;
+  }
+
 }

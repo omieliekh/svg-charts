@@ -6,6 +6,7 @@ SVGCharts({
 SVGCharts({
   container: '#mini',
   data: chartData,
-  strokeWidth: 1
+  strokeWidth: 1,
+  isSimpleChart: true
 });
 

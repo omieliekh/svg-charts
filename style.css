@@ -1,5 +1,6 @@
 svg {
   background: #f8f8f8;
+  margin-bottom: 1px;
 }
 
 path {
@@ -12,4 +13,42 @@ path {
 
 .sector-line {
   pointer-events: none;
+}
+
+text {
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  line-height: 14px;
+  fill: #444;
+}
+
+.sliders,
+.slider-bg {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.slider-bg {
+  background-color: #ff000066;
+}
+
+.slider-left,
+.slider-right {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 8px;
+  background-color: #ff000066;
+  cursor: col-resize;
+}
+
+.slider-left {
+  left: 0;
+}
+
+.slider-right {
+  right: 0;
 }

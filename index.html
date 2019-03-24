@@ -12,10 +12,18 @@
 </head>
 <body>
 
-<div id="container" style="width: 100%; height: 250px"></div>
-<div id="mini" style="width: 100%; height: 50px"></div>
+<div id="container" style="width: 100%; height: 250px; margin-bottom: 2px;"></div>
+<div id="mini" style="width: 100%; height: 50px; position: relative;">
+  <div class="sliders">
+    <div class="slider-bg"></div>
+    <div class="slider-left" draggable="true" ondragstart="dragStart(event)" ondrag="drag(event)" ondragend="drag(event)"></div>
+    <div class="slider-right" draggable="true" ondragstart="dragStart(event)" ondrag="drag(event)" ondragend="drag(event)"></div>
+  </div>
+</div>
+
 
 <script src="chartData.js"></script>
+<script src="svg-chart-utils.js"></script>
 <script src="svg-charts.js"></script>
 <script src="script.js"></script>
 </body>
