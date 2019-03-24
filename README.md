@@ -15,3 +15,7 @@ SVGCharts({
 ```
 
 Where `chartData` - object in specific format (check [chart_data.json](chart_data.json) for reference)
+
+## Example
+
+Try it out at https://omieliekh.github.io/svg-charts/
